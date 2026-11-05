@@ -1,14 +1,16 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 2단계 준비 중
+## 현재 작업: 3단계 로그인 자료실
 
-기존 1단계 자료실을 이어서 수정했습니다. 가상 메모 4건은 과제 전용 Supabase 데이터베이스의 vault_notes에 보관했고, 최신 작업 파일의 data.json과 public/data.json은 제거했습니다. 화면은 /api/notes 서버 API로 자료를 요청합니다. API 실패를 정상 빈 자료로 숨기지 않습니다. 아직 로그인 보호 단계가 아니므로 가상 자료만 사용합니다.
+2단계의 가상 자료 네 건과 vault_notes 테이블은 보존했습니다. 최신 정적 파일에 메모 원문을 포함하지 않습니다. 2단계 최근 제출은 공식 검사에서 완결성 100점이었습니다. 지금은 Supabase Auth 이메일·비밀번호 로그인 및 로그아웃, 토큰 검증, 로그인 사용자 메모 CRUD를 추가하는 3단계입니다.
 
-데이터베이스에서 RLS 활성화, anon/authenticated 직접 SELECT 거부, service_role SELECT 4건을 확인했습니다. 로컬 API 계약 및 기존 식별 정보 검사 4개가 통과했고 `npm run build -- --local`이 완료됐습니다. 검사는 `node --test --test-isolation=none test/stage2.test.mjs test/r5.test.mjs`로 실행합니다.
+Node.js 24에서 `npm ci`, `npm run test:app`, `npm run build -- --local` 순으로 실행합니다. 브라우저 SDK는 고정된 npm 패키지를 같은 출처의 app.js로 묶습니다. 화면은 로그인 후 메모 추가, 각 메모의 수정·삭제, 로그아웃 순으로 확인합니다. 브라우저에는 공개 publishable key만 있습니다. 서버는 변경하지 않은 제공 도우미 src/verify-login.mjs로 토큰을 검증하고, 클라이언트가 보낸 userId·role·owner_id를 신뢰하지 않습니다.
 
-Vercel 서버 환경변수 SUPABASE_URL과 기존 서버 전용 SUPABASE_SERVICE_ROLE_KEY를 Production·Preview에 설정했습니다. 키는 Vercel Secret으로 저장했으며 코드·Git에 넣지 않았습니다. publicAppUrl은 기존 프로젝트의 실제 주소 https://choi-bujang-secret-vault-peach.vercel.app 로 설정했습니다. 새 배포와 `npm run bundle`은 아직 확인 전이므로 이 상태를 2단계 완료로 세지 않습니다.
+Vercel의 SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY는 Production·Preview에 설정돼 있습니다. 서버 키는 Secret이며 Git에 넣지 않습니다. 실제 주소는 https://choi-bujang-secret-vault-peach.vercel.app 입니다. identityProvider와 실제 GET/POST/PUT/DELETE 경로는 aleph.config.json에 기록했습니다. 명령을 실행하지 않은 새 환경이나 실제 계정 A의 이메일·비밀번호 로그인은 검증 완료로 쓰지 않습니다.
 
-배포 후 `/`에서 가상 자료 목록이 보여야 하고 `/data.json`은 404 또는 메모 0건이어야 합니다. 직접 DB 요청은 브라우저 권한으로 거부돼야 합니다. 과거 공개 이력의 한계는 [설명 문서](docs/STATIC_HISTORY_LIMITS.md)를 참고하세요. 아래 내용은 1단계 시작 방식의 기록입니다.
+3단계의 notes 테이블은 기존 가상 자료와 분리됩니다. 로그인하지 않은 자료 요청은 401 JSON 오류여야 합니다. 유효한 사용자 A는 자기 목록 조회 및 가상 메모 CRUD를 할 수 있어야 합니다. 단건 접근의 소유자 검사는 공식 3단계 안내대로 다음 4단계에서 구현하므로, 현재는 다른 로그인 사용자의 단건 접근을 막았다고 주장하지 않습니다. 실제 개인정보는 저장하지 않습니다. 로컬 시험은 정상 모의 토큰과 누락·위조·만료·다른 audience의 거부, CRUD 계약을 검증합니다. 공식 심판 및 실제 이메일 로그인은 별도로 기록합니다.
+
+과거 공개 이력의 한계는 [설명 문서](docs/STATIC_HISTORY_LIMITS.md)를 참고하세요. 아래 내용은 1단계 시작 방식의 기록입니다.
 
 이 저장소는 1단계에서 학생 본인이 GitHub 저장소와 Vercel 배포를 만드는 출발점입니다. 포함된 메모 네 건은 가상 자료입니다. 실제 학생 자료, 토큰, 비밀키를 넣지 마세요.
 

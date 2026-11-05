@@ -1,6 +1,7 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
 export async function runAttackChecks(config) {
+  if (config.step === 3) return runStageThreeChecks(config);
   if (config.step === 2) return runStageTwoChecks(config);
   if (config.step !== 1) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
@@ -29,6 +30,28 @@ export async function runAttackChecks(config) {
   }
   return [{ attackId: 'anonymous_note_read', expected: '비로그인 화면에서 가상 메모를 확인',
     observed: visible ? '비로그인 요청에서 공개 가상 메모 확인 표시가 보임' : `비로그인 요청에서 확인 표시가 보이지 않음 (HTTP ${response.status})` }];
+}
+
+async function runStageThreeChecks(config) {
+  const app=new URL(config.publicAppUrl);
+  if(app.protocol!=='https:'||app.username||app.password||app.search||app.hash||app.pathname!=='/'||app.hostname.endsWith('.example')) throw new Error('실제 배포 주소를 먼저 설정하세요.');
+  const attempts=[];
+  for(const [attackId,method,headers,body] of [
+    ['anonymous_note_read','GET',{},undefined],
+    ['anonymous_note_create','POST',{'Content-Type':'application/json'},JSON.stringify({title:'self-check',body:'fictional request without authentication'})],
+    ['invalid_token_read','GET',{Authorization:'Bearer invalid'},undefined],
+  ]) {
+    const response=await fetch(new URL('/api/notes',app),{method,headers,body,redirect:'error',signal:AbortSignal.timeout(10000)});
+    let errorJson=false;
+    try {const data=await response.json();errorJson=typeof data.error==='string';}catch{/* HTML is not an authentication rejection. */}
+    attempts.push({attackId,expected:'인증 없는 또는 유효하지 않은 요청은 자료 없이 401/403 JSON 오류로 거부',observed:`HTTP ${response.status}, JSON 오류 ${errorJson?'확인됨':'확인되지 않음'}, 거부 ${[401,403].includes(response.status)?'확인됨':'확인되지 않음'}`});
+  }
+  const identityResponse=await fetch(new URL('/aleph.json',app),{redirect:'error',signal:AbortSignal.timeout(10000)});
+  let identityMatches=false;
+  if(identityResponse.ok){try{const id=await identityResponse.json();identityMatches=id.step===3&&id.repoUrl===config.repoUrl&&/^[a-f0-9]{40}$/u.test(id.commit||'');}catch{}}
+  attempts.push({attackId:'deployment_identity',expected:'3단계 배포 식별 정보',observed:identityMatches?'확인됨':'확인되지 않음'});
+  attempts.push({attackId:'student_login_crud',expected:'실제 A 계정의 이메일·비밀번호 로그인과 CRUD',observed:'이 자기 점검에서는 미실행. 로컬 모의 토큰 시험과 공식 심판의 정상 요청 검증을 별도 기록합니다.'});
+  return attempts;
 }
 
 async function runStageTwoChecks(config) {

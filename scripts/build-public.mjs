@@ -1,14 +1,16 @@
 import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { deploymentIdentity } from './deployment-identity.mjs';
+import { build } from 'esbuild';
 
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, 'public', 'data.json');
 const config = JSON.parse(await readFile(resolve(root, 'aleph.config.json'), 'utf8'));
-if (config.step !== 2) throw new Error('현재 빌드는 2단계 서버 API 자료 분리용입니다. 단계 설정을 확인하세요.');
+if (config.step !== 3) throw new Error('현재 빌드는 3단계 인증 자료실용입니다. 단계 설정을 확인하세요.');
 await mkdir(resolve(root, 'public'), { recursive: true });
 await rm(output, { force: true });
 console.log('공개 data.json을 생성하지 않습니다. 자료는 서버 API에서 읽습니다.');
+await build({entryPoints:[resolve(root,'src/browser.mjs')],bundle:true,format:'esm',platform:'browser',target:'es2022',outfile:resolve(root,'public/app.js'),minify:true});
 if (!process.argv.includes('--local')) {
   const identity = deploymentIdentity(process.env, config);
   await writeFile(resolve(root, 'public', 'aleph.json'),
