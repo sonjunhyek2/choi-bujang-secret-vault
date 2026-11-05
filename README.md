@@ -1,5 +1,15 @@
 # BYTE BACK 방어전 시작 틀 R5
 
+## 현재 작업: 2단계 준비 중
+
+기존 1단계 자료실을 이어서 수정했습니다. 가상 메모 4건은 과제 전용 Supabase 데이터베이스의 vault_notes에 보관했고, 최신 작업 파일의 data.json과 public/data.json은 제거했습니다. 화면은 /api/notes 서버 API로 자료를 요청합니다. API 실패를 정상 빈 자료로 숨기지 않습니다. 아직 로그인 보호 단계가 아니므로 가상 자료만 사용합니다.
+
+데이터베이스에서 RLS 활성화, anon/authenticated 직접 SELECT 거부, service_role SELECT 4건을 확인했습니다. 로컬 API 계약 및 기존 식별 정보 검사 4개가 통과했고 `npm run build -- --local`이 완료됐습니다. 검사는 `node --test --test-isolation=none test/stage2.test.mjs test/r5.test.mjs`로 실행합니다.
+
+Vercel 서버 환경변수 SUPABASE_URL과 기존 서버 전용 SUPABASE_SERVICE_ROLE_KEY를 Production·Preview에 설정했습니다. 키는 Vercel Secret으로 저장했으며 코드·Git에 넣지 않았습니다. publicAppUrl은 기존 프로젝트의 실제 주소 https://choi-bujang-secret-vault-peach.vercel.app 로 설정했습니다. 새 배포와 `npm run bundle`은 아직 확인 전이므로 이 상태를 2단계 완료로 세지 않습니다.
+
+배포 후 `/`에서 가상 자료 목록이 보여야 하고 `/data.json`은 404 또는 메모 0건이어야 합니다. 직접 DB 요청은 브라우저 권한으로 거부돼야 합니다. 과거 공개 이력의 한계는 [설명 문서](docs/STATIC_HISTORY_LIMITS.md)를 참고하세요. 아래 내용은 1단계 시작 방식의 기록입니다.
+
 이 저장소는 1단계에서 학생 본인이 GitHub 저장소와 Vercel 배포를 만드는 출발점입니다. 포함된 메모 네 건은 가상 자료입니다. 실제 학생 자료, 토큰, 비밀키를 넣지 마세요.
 
 ## 학생이 하는 일: 세 걸음
