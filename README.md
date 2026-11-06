@@ -1,6 +1,10 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 7단계 복합 이상 접속 재확인
+## 현재 작업: 8단계 자원별 구역 제한
+
+자원 ID는 `personal_note`(서비스 notes), `class_notice`(notices), `teacher_material`(teacher)로 나눕니다. 판정기는 notes의 단일 자료 ID GET/PUT/DELETE와 notices의 단일 공지 ID GET만 허용합니다. ID는 UUID로 좁히지 않으며 운영 경로 /api/notes/:id와 엔진의 /notes/:id 표기를 모두 명시적으로 지원합니다. 목록·쿼리 기능 선택·예약 기능 이름·추가 경로·강사 자료·공지 쓰기는 거부합니다. config.allowedRoutes에는 실제 허용 메서드와 /api 경로만 기록합니다.
+
+기존 화면과 메모 API는 보존합니다. 브라우저의 본인 목록·추가는 서버 소유자 검사로 유지하지만, 릴레이 판정의 전체 목록 경로는 허용하지 않습니다. 다른 소유자의 단건 자료는 API에서404이며 요청 role로 공지를 쓸 수 없습니다. 읽기 전용 학습 공지는 /api/notices/welcome이고 로그인하지 않으면401입니다. 강사 관리 쓰기 기능은 구현하지 않고 모두 거부합니다. `npm run test:policy` 및 `npm run test:app`로 경로 경계와 기존 소유자 검사를 확인합니다. 7단계는 공식100점으로 통과했습니다.
 
 `docs/DECIDER_REQUEST.md`의 subjectId는 운영 서버가 확인한 가명 사용자이며 Supabase userId와 직접 대조하지 않습니다. deviceRegistered가 false·누락이면 먼저 deny/device_not_registered입니다. 기기 규칙을 유지하면서, 심판 가상 신호에서 야간(0~5시·22~23시)·낯선 네트워크·최근 10분 risk_signal 20회 이상이 함께 나타날 때 step_up/step_up_required를 반환합니다. 지역 하나만으로 막지 않습니다. 알 수 없는 출처·누락 신호는 정상으로 채우지 않고 추가 확인을 요구합니다.
 

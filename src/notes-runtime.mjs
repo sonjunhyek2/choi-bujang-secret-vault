@@ -4,6 +4,8 @@ import { createNotesHandler } from './notes-handler.mjs';
 import config from '../aleph.config.json' with { type:'json' };
 
 let runtime;
+let verifier;
+export function getIdentityVerifier(){getNotesRuntime();return verifier;}
 export function getNotesRuntime() {
   if(runtime) return runtime;
   const url=process.env.SUPABASE_URL;
@@ -11,6 +13,7 @@ export function getNotesRuntime() {
   if(url!==config.identityProvider.issuer.replace(/\/auth\/v1$/u,'')||!secret) throw Error('DATABASE_NOT_CONFIGURED');
   const client=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const verify=createLoginVerifier({config,supabaseSecretKey:secret,supabaseClient:client});
+  verifier=verify;
   const result=async promise=>{const {data,error}=await promise;if(error)throw error;return data;};
   const store={
     list:owner=>result(client.from('notes').select('id,title,body').eq('owner_id',owner).order('created_at',{ascending:false}).limit(100)),

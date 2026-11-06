@@ -1,5 +1,6 @@
 // Only engine-verified fields from docs/DECIDER_REQUEST.md are accepted.
-export const RULE_IDS = Object.freeze(['device_registered','step_up_required']);
+import {allowedResource} from './resources.mjs';
+export const RULE_IDS = Object.freeze(['device_registered','step_up_required','resource_scope']);
 
 export async function decide(request) {
   const reply=(decision,reasonCode,ruleIds)=>({
@@ -8,6 +9,7 @@ export async function decide(request) {
     decision,reasonCode,ruleIds,
   });
   if(request?.deviceRegistered!==true)return reply('deny','device_not_registered',['device_registered']);
+  if(!allowedResource(request))return reply('deny','resource_not_allowed',['device_registered','resource_scope']);
   const signals=request.signals;
   const fixture=signals?.source==='judge_fixture';
   const validSignals=fixture&&Number.isInteger(signals.hour)&&signals.hour>=0&&signals.hour<=23
