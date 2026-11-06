@@ -35,6 +35,16 @@ export async function runAttackChecks(config) {
 async function runStageThreeChecks(config) {
   const app=new URL(config.publicAppUrl);
   if(app.protocol!=='https:'||app.username||app.password||app.search||app.hash||app.pathname!=='/'||app.hostname.endsWith('.example')) throw new Error('실제 배포 주소를 먼저 설정하세요.');
+  // Bundle generation does not imply a live network test. Explicitly opt in
+  // with ALEPH_LIVE_SELF_CHECKS=1; otherwise no request or result is claimed.
+  if(config.step===12&&!(typeof process==='object'&&process.env?.ALEPH_LIVE_SELF_CHECKS==='1'))return [
+    {attackId:'anonymous_note_read',expected:'인증 없는 메모 목록은 401/403 JSON 오류',observed:'not_run'},
+    {attackId:'invalid_token_read',expected:'유효하지 않은 토큰은 401/403 JSON 오류',observed:'not_run'},
+    {attackId:'anonymous_note_create',expected:'인증 없는 생성은 거부',observed:'not_run'},
+    {attackId:'deployment_identity',expected:'12단계 배포 식별 정보',observed:'not_run'},
+    {attackId:'original_api_public_key',expected:'공개 키 원본 자료 직접 요청 거부',observed:'not_run'},
+    {attackId:'student_login_crud',expected:'실제 계정의 로그인과 본인 CRUD',observed:'not_run'},
+  ];
   const readEvidence=(response,url)=>{
     const requestId=response.headers?.get?.('x-request-id')||response.headers?.get?.('x-vercel-id')||response.headers?.get?.('sb-request-id')||'unavailable';
     return `GET ${url} -> HTTP ${response.status}; request_id=${requestId}; checked_at=${new Date().toISOString()}`;
