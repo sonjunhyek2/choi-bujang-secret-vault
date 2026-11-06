@@ -1,14 +1,14 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 4단계 사용자별 자료실
+## 현재 작업: 5단계 서버 전용 자료 경로
 
-2단계의 가상 자료 네 건과 vault_notes 테이블은 보존했습니다. 최신 정적 파일에 메모 원문을 포함하지 않습니다. 2·3단계 최근 제출은 공식 검사에서 완결성 100점이었습니다. Supabase Auth 로그인·로그아웃과 제공 검증기를 유지하며, 4단계에서는 모든 메모 조회·수정·삭제를 검증된 소유자로 제한합니다.
+2단계의 가상 자료 네 건과 vault_notes 테이블은 보존했습니다. 최신 정적 파일에 메모 원문을 포함하지 않습니다. 2~4단계 최근 제출은 공식 검사에서 완결성 100점이었습니다. Supabase Auth 로그인·로그아웃과 제공 검증기를 유지하며 모든 메모 API를 검증된 소유자로 제한합니다. 브라우저의 자료 직접 호출은 없었고, 5단계에서는 notes의 PUBLIC·anon·authenticated 직접 권한을 모두 회수합니다. 원본 HTTPS 경로는 aleph.config.json에 기록했습니다.
 
 Node.js 24에서 `npm ci`, `npm run test:app`, `npm run build -- --local` 순으로 실행합니다. 브라우저 SDK는 고정된 npm 패키지를 같은 출처의 app.js로 묶습니다. 화면은 로그인 후 메모 추가, 각 메모의 수정·삭제, 로그아웃 순으로 확인합니다. 브라우저에는 공개 publishable key만 있습니다. 서버는 변경하지 않은 제공 도우미 src/verify-login.mjs로 토큰을 검증하고, 클라이언트가 보낸 userId·role·owner_id를 신뢰하지 않습니다.
 
 Vercel의 SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY는 Production·Preview에 설정돼 있습니다. 서버 키는 Secret이며 Git에 넣지 않습니다. 실제 주소는 https://choi-bujang-secret-vault-peach.vercel.app 입니다. identityProvider와 실제 GET/POST/PUT/DELETE 경로는 aleph.config.json에 기록했습니다. 명령을 실행하지 않은 새 환경이나 실제 계정 A의 이메일·비밀번호 로그인은 검증 완료로 쓰지 않습니다.
 
-notes 테이블은 기존 가상 자료와 분리됩니다. 비로그인 자료 요청은 401 JSON, 상대 소유 메모는 404, 다른 owner_id를 주장한 생성·수정은 403입니다. 본인 CRUD는 유지합니다. Supabase에도 사용자별 RLS를 적용했고 anon은 권한 없음, authenticated는 CRUD만 허용되는 것을 권한 조회로 확인했습니다. RLS 실제 A/B 트랜잭션 시험은 미실행이며 로컬 모의 신원 시험과 구분합니다. 자세한 정책은 [4단계 기록](docs/STAGE4_OWNERSHIP.md)에 있습니다. 실제 개인정보는 저장하지 않습니다.
+notes 테이블은 기존 가상 자료와 분리됩니다. 비로그인 자료 요청은 401 JSON, 상대 소유 메모는 404, 다른 owner_id를 주장한 생성·수정은 403입니다. 본인 CRUD는 서버 전용 권한으로 유지합니다. 4단계 RLS는 유지하되 5단계에서 authenticated CRUD 권한도 회수합니다. service_role만 CRUD할 수 있고 API에서 소유자를 확인합니다. 실제 A/B 이메일 화면 시험은 미검증이며 로컬 모의 시험과 구분합니다. [4단계 기록](docs/STAGE4_OWNERSHIP.md)은 당시 정책의 이력입니다. 로그인 Auth SDK의 공개 키는 아직 화면 묶음에 포함되므로 해당 가점은 구현 완료로 쓰지 않습니다.
 
 과거 공개 이력의 한계는 [설명 문서](docs/STATIC_HISTORY_LIMITS.md)를 참고하세요. 아래 내용은 1단계 시작 방식의 기록입니다.
 
