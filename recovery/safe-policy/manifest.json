@@ -1,0 +1,10 @@
+{
+  "schema": "aleph.policy.backup.v1",
+  "sourceCommit": "fb0d25bc2963a7ac4b069f2bd1feff3293b7d232",
+  "files": {
+    "src/decider.mjs": "d51d25584b49cad9c43df398b02b8840b1cd5bdc978fc5b000d768b679373cc1",
+    "src/resources.mjs": "dea18a8ec89d6dc6b7b39b533dc509e0c7c54c7bcff7de8c98f332198aa9ca79",
+    "aleph.config.json": "443334c55f7024a76a2a9ce758efa62a2e8dafd2d3827e31da80beec34223d6a",
+    "db-policy.json": "a8c886721ed90065971ce62c608f2d647c03fa7d65425f14beb9ad362b32465f"
+  }
+}

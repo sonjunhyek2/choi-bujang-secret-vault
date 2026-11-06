@@ -1,0 +1,59 @@
+{
+  "table": "public.notes",
+  "grants": [
+    {
+      "grantee": "service_role",
+      "privilege": "DELETE"
+    },
+    {
+      "grantee": "service_role",
+      "privilege": "INSERT"
+    },
+    {
+      "grantee": "service_role",
+      "privilege": "SELECT"
+    },
+    {
+      "grantee": "service_role",
+      "privilege": "UPDATE"
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "DELETE",
+      "name": "notes_delete_owner",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(( SELECT auth.uid() AS uid) = owner_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "name": "notes_insert_owner",
+      "check": "(( SELECT auth.uid() AS uid) = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null
+    },
+    {
+      "cmd": "SELECT",
+      "name": "notes_select_owner",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(( SELECT auth.uid() AS uid) = owner_id)"
+    },
+    {
+      "cmd": "UPDATE",
+      "name": "notes_update_owner",
+      "check": "(( SELECT auth.uid() AS uid) = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(( SELECT auth.uid() AS uid) = owner_id)"
+    }
+  ]
+}

@@ -1,6 +1,14 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 9단계 폭주 조회 탐지
+## 현재 작업: 10단계 검증한 사본에서 대상 복원
+
+정책 사본은 9단계 fb0d25bc2963a7ac4b069f2bd1feff3293b7d232의 판정기·자원 규칙·설정과 실제 조회한 DB 권한/RLS 메타데이터입니다. recovery/safe-policy/manifest.json의 각 SHA-256과 스크립트에 고정한 manifest 해시를 먼저 대조합니다. `node scripts/policy-recovery.mjs init-demo`로 artifacts 아래 시험 사본의 기기 조건 한 줄만 바꿉니다. `node scripts/policy-recovery.mjs preview`로 복원 버전·대상·변경 줄을 확인한 뒤 `node scripts/policy-recovery.mjs restore --apply`로 그 시험 항목만 복원합니다. 사본·해시가 없거나 틀리면 중단합니다. 실제 정책·다른 서비스·기존 감사 이력은 변경하지 않습니다.
+
+시험 계정 B의 로컬 가상 복구 메모 ID는 `b2222222-2222-4222-8222-222222222222`입니다. 서비스 notes, 경로 `GET /api/restore?id=<ID>`로 ID·소유자·해시·버전을 미리 확인하고 `POST /api/restore`에 `{id}`로 한 건만 복원합니다. 본문/쿼리 ID 생략 시 위 시험 ID만 대상으로 합니다. 심판이 만든 별도 B 메모는 그 ID를 본문 id에 넣습니다. 메모 생성 시 서버가 원본과 비공개 vault_private.note_backups 사본을 같은 트랜잭션에서 저장합니다. 기존 메모를 덮어쓰거나 임의로 소유자를 이관하지 않습니다. 신규 백업 적용 전 메모는 사본이 없어 복원하지 않습니다.
+
+복원은 제공 검증기의 로그인 신원과 사본 소유자를 대조합니다. 심판은 B 신원만 복원할 수 있으며 다른 사용자의 ID를 쓸 수 없습니다. DB 함수도 ID·소유자·UTF-8 길이로 구분한 제목/내용 SHA-256을 다시 계산합니다. 불일치는 중단하고 다른 메모는 보존합니다. 복구 감사 이력에는 ID·소유자·해시·시각만 추가하며 메모 본문·토큰은 기록하지 않습니다. 백업·감사 테이블 및 RPC는 service_role 외에 직접 권한이 없습니다. 소스·Git·출력 묶음에 실제 메모 사본을 넣지 않습니다.
+
+검증 순서: 정책 preview/시험 사본 복원 → `npm run test:recovery`(B 변조·삭제 복원, 소유자·해시 거부) → `npm run test:app`(로그인·소유자 CRUD) → `npm run decider:test` → `npm run test:policy` → `npm run detect:test`. 실제 배포에서는 비로그인 API·원본 공개 키 거부를 재확인하고 공식 심판의 B 메모 복원 결과를 별도로 기록합니다. 실제 A/B 이메일 화면·운영 엔진 연결 실측은 미실행입니다. 9단계는 공식100점으로 통과했습니다.
 
 `docs/DETECT_EVENTS.md`의 at·method·identity.sub만 사용합니다. 같은 가명 사용자별 GET 시각을 정렬하고 어느 연속10분 구간에서든121건 이상일 때만 `{action:'propose_revocation',reasonCode:'burst_read',subject}`를 반환합니다. 정확히120건, 10분 밖으로 분산된 조회, 서로 다른 사용자, 쓰기 요청은 합치지 않습니다. 정상은 `{action:'observe'}`입니다. 사건 원문이나 토큰을 저장·출력하지 않습니다.
 
