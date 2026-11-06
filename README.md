@@ -1,6 +1,10 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 8단계 자원별 구역 제한
+## 현재 작업: 9단계 폭주 조회 탐지
+
+`docs/DETECT_EVENTS.md`의 at·method·identity.sub만 사용합니다. 같은 가명 사용자별 GET 시각을 정렬하고 어느 연속10분 구간에서든121건 이상일 때만 `{action:'propose_revocation',reasonCode:'burst_read',subject}`를 반환합니다. 정확히120건, 10분 밖으로 분산된 조회, 서로 다른 사용자, 쓰기 요청은 합치지 않습니다. 정상은 `{action:'observe'}`입니다. 사건 원문이나 토큰을 저장·출력하지 않습니다.
+
+`npm run detect:test`는 제공6개 묶음, `npm run test:detection`은 순서가 섞인 사건과 정확한10분 경계 등을 확인합니다. 이 함수는 회수 제안만 돌려주고 실제 회수 API·기기 권한 변경을 만들지 않았습니다. 운영 사건 전달·회수 집행·실제 재접속 차단은 별도 미검증입니다. 8단계는 공식100점으로 통과했습니다.
 
 자원 ID는 `personal_note`(서비스 notes), `class_notice`(notices), `teacher_material`(teacher)로 나눕니다. 판정기는 notes의 단일 자료 ID GET/PUT/DELETE와 notices의 단일 공지 ID GET만 허용합니다. ID는 UUID로 좁히지 않으며 운영 경로 /api/notes/:id와 엔진의 /notes/:id 표기를 모두 명시적으로 지원합니다. 목록·쿼리 기능 선택·예약 기능 이름·추가 경로·강사 자료·공지 쓰기는 거부합니다. config.allowedRoutes에는 실제 허용 메서드와 /api 경로만 기록합니다.
 
