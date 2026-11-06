@@ -1,6 +1,10 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 5단계 서버 전용 자료 경로
+## 현재 작업: 6단계 등록 기기 판정
+
+`docs/DECIDER_REQUEST.md`의 subjectId는 운영 서버가 확인한 가명 사용자이며 Supabase userId와 직접 대조하지 않습니다. deviceRegistered는 운영 서버가 확인한 기기 등록 값입니다. `src/decider.mjs`는 true인 경우만 allow·approved, false·누락은 deny·device_not_registered로 반환합니다. RULE_IDS에는 구현한 device_registered만 있습니다. 인증서·CA·개인키를 만들지 않았고 별도 접속 앱 설치도 없습니다.
+
+`npm run decider:test`에서 등록 기기의 정상 요청과 미등록 기기의 거부 결과를 확인합니다. 이는 로컬 가상 요청 연습이며 실제 mTLS 통로 공격이나 공식 심판 통과를 증명하지 않습니다. 기존 배포 주소와 자료실 화면은 유지하며, 5단계 서버 로그인은 90점 기본 통과 후 가점을 재심사 중입니다.
 
 2단계의 가상 자료 네 건과 vault_notes 테이블은 보존했습니다. 최신 정적 파일에 메모 원문을 포함하지 않습니다. 2~4단계 최근 제출은 공식 검사에서 완결성 100점이었습니다. Supabase Auth 로그인·로그아웃과 제공 검증기를 유지하며 모든 메모 API를 검증된 소유자로 제한합니다. 브라우저의 자료 직접 호출은 없었고, 5단계에서는 notes의 PUBLIC·anon·authenticated 직접 권한을 모두 회수합니다. 원본 HTTPS 경로는 aleph.config.json에 기록했습니다.
 
