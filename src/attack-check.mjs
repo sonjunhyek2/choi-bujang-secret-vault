@@ -1,7 +1,7 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
 export async function runAttackChecks(config) {
-  if (config.step === 3) return runStageThreeChecks(config);
+  if ([3,4].includes(config.step)) return runStageThreeChecks(config);
   if (config.step === 2) return runStageTwoChecks(config);
   if (config.step !== 1) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
@@ -48,8 +48,9 @@ async function runStageThreeChecks(config) {
   }
   const identityResponse=await fetch(new URL('/aleph.json',app),{redirect:'error',signal:AbortSignal.timeout(10000)});
   let identityMatches=false;
-  if(identityResponse.ok){try{const id=await identityResponse.json();identityMatches=id.step===3&&id.repoUrl===config.repoUrl&&/^[a-f0-9]{40}$/u.test(id.commit||'');}catch{}}
-  attempts.push({attackId:'deployment_identity',expected:'3단계 배포 식별 정보',observed:identityMatches?'확인됨':'확인되지 않음'});
+  if(identityResponse.ok){try{const id=await identityResponse.json();identityMatches=id.step===config.step&&id.repoUrl===config.repoUrl&&/^[a-f0-9]{40}$/u.test(id.commit||'');}catch{}}
+  attempts.push({attackId:'deployment_identity',expected:`${config.step}단계 배포 식별 정보`,observed:identityMatches?'확인됨':'확인되지 않음'});
+  if(config.step===4) attempts.push({attackId:'cross_owner_crud',expected:'실제 A/B 각자 CRUD 허용, 상대 자료 조회·수정·삭제 거부',observed:'실제 A/B 로그인 요청은 이 자기 점검에서 미실행. 로컬 모의 시험과 DB 역할 시험은 별도이며 공식 판정으로 대체하지 않습니다.'});
   attempts.push({attackId:'student_login_crud',expected:'실제 A 계정의 이메일·비밀번호 로그인과 CRUD',observed:'이 자기 점검에서는 미실행. 로컬 모의 토큰 시험과 공식 심판의 정상 요청 검증을 별도 기록합니다.'});
   return attempts;
 }

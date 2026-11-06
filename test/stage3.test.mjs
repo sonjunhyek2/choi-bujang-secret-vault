@@ -28,19 +28,31 @@ test('CRUD uses verified identity and preserves exact note route contract',async
  const project=({id,title,body})=>({id,title,body});
  const handler=createNotesHandler({verify,store:{
   list:async owner=>[...rows.values()].filter(n=>n.owner_id===owner).map(project),
-  get:async id=>rows.has(id)?project(rows.get(id)):null,
+  get:async(id,owner)=>rows.get(id)?.owner_id===owner?project(rows.get(id)):null,
   create:async note=>rows.set(note.id,note),
-  update:async(id,fields)=>{if(!rows.has(id))return null;rows.set(id,{...rows.get(id),...fields});return project(rows.get(id));},
-  remove:async id=>rows.delete(id),
+  update:async(id,fields,owner)=>{if(rows.get(id)?.owner_id!==owner)return null;rows.set(id,{...rows.get(id),...fields});return project(rows.get(id));},
+  remove:async(id,owner)=>rows.get(id)?.owner_id===owner&&rows.delete(id),
  }});
  const authorization=`Bearer ${await token()}`;
  const call=async(method,id,body,auth=authorization)=>{const res=response();await handler({method,query:id?{id}:{},body,headers:{authorization:auth}},res);return res;};
  const denied=await call('POST',null,{title:'fixture',body:'fixture'},null);assert.equal(denied.code,401);
  const unauth=response();await handler({method:'GET',query:{},headers:{}},unauth);assert.equal(unauth.code,401);
- const created=await call('POST',null,{title:'fixture',body:'fictional',owner_id:B,userId:B,role:'admin'});
+ assert.equal((await call('POST',null,{title:'fixture',body:'fictional',owner_id:B})).code,403);
+ const created=await call('POST',null,{title:'fixture',body:'fictional',userId:B,role:'admin'});
  assert.equal(created.code,201);const id=created.body.id;assert.equal(rows.get(id).owner_id,A);
  assert.deepEqual((await call('GET',id)).body,{id,title:'fixture',body:'fictional'});
- assert.equal((await call('PUT',id,{title:'edited',body:'changed',owner_id:B})).code,200);assert.equal(rows.get(id).owner_id,A);
+ assert.equal((await call('PUT',id,{title:'edited',body:'changed',owner_id:B})).code,403);assert.equal(rows.get(id).owner_id,A);
+ const bAuth=`Bearer ${await token({sub:B,aleph_identity:'b'})}`;
+ for(const method of ['GET','PUT','DELETE']) assert.equal((await call(method,id,{title:'intrusion',body:'fixture'},bAuth)).code,404);
+ assert.deepEqual((await call('GET',null,null,bAuth)).body,[]);
+ assert.equal(rows.get(id).body,'fictional');
+ const bCreated=await call('POST',null,{title:'B fixture',body:'fictional'},bAuth);assert.equal(bCreated.code,201);
+ assert.equal(rows.get(bCreated.body.id).owner_id,B);
+ assert.equal((await call('GET',bCreated.body.id)).code,404);
+ assert.equal((await call('GET',bCreated.body.id,null,bAuth)).code,200);
+ assert.equal((await call('PUT',bCreated.body.id,{title:'B edit',body:'fixture'},bAuth)).code,200);
+ assert.equal((await call('DELETE',bCreated.body.id,null,bAuth)).code,200);
+ assert.equal((await call('PUT',id,{title:'edited',body:'changed'})).code,200);
  assert.equal((await call('GET')).body.some(n=>n.id===id),true);
  assert.equal((await call('DELETE',id)).code,200);assert.equal((await call('GET',id)).code,404);
  assert.equal((await call('GET','bad-id')).code,400);

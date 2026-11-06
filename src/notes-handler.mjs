@@ -14,11 +14,11 @@ export function createNotesHandler({verify,store}) {
       const id=rawId?.toLowerCase();
       if(request.method==='GET') {
         if(!id) return json(200,await store.list(principal.userId));
-        const note=await store.get(id);
+        const note=await store.get(id,principal.userId);
         return note?json(200,note):json(404,{error:'NOTE_NOT_FOUND'});
       }
       if(request.method==='DELETE'&&id) {
-        const removed=await store.remove(id);
+        const removed=await store.remove(id,principal.userId);
         return removed?json(200,{id}):json(404,{error:'NOTE_NOT_FOUND'});
       }
       if(request.method==='POST'&&!id||request.method==='PUT'&&id) {
@@ -26,6 +26,7 @@ export function createNotesHandler({verify,store}) {
         if(typeof body==='string') {try{body=JSON.parse(body);}catch{return json(400,{error:'INVALID_JSON'});}}
         if(!body||typeof body!=='object'||Array.isArray(body)||typeof body.title!=='string'||
           !body.title.trim()||body.title.length>200||typeof body.body!=='string'||body.body.length>10000) return json(400,{error:'INVALID_NOTE'});
+        if(body.owner_id!==undefined&&body.owner_id!==principal.userId) return json(403,{error:'OWNER_CHANGE_FORBIDDEN'});
         const fields={title:body.title.trim(),body:body.body};
         if(request.method==='POST') {
           if(body.id!==undefined&&(typeof body.id!=='string'||!UUID.test(body.id))) return json(400,{error:'INVALID_NOTE_ID'});
@@ -33,7 +34,7 @@ export function createNotesHandler({verify,store}) {
           await store.create({id:createdId,...fields,owner_id:principal.userId});
           return json(201,{id:createdId});
         }
-        const updated=await store.update(id,fields);
+        const updated=await store.update(id,fields,principal.userId);
         return updated?json(200,updated):json(404,{error:'NOTE_NOT_FOUND'});
       }
       response.setHeader('Allow',id?'GET, PUT, DELETE':'GET, POST');
