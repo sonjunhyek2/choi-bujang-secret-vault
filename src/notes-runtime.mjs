@@ -2,13 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 import { createLoginVerifier } from './verify-login.mjs';
 import { createNotesHandler } from './notes-handler.mjs';
 import {createRestoreHandler} from './recovery.mjs';
+import {createDeviceGate,createDeviceHandler} from './device-approval.mjs';
 import config from '../aleph.config.json' with { type:'json' };
 
 let runtime;
 let verifier;
 let restoreRuntime;
+let deviceRuntime;
+let deviceGate;
 export function getIdentityVerifier(){getNotesRuntime();return verifier;}
 export function getRestoreRuntime(){getNotesRuntime();return restoreRuntime;}
+export function getDevicesRuntime(){getNotesRuntime();return deviceRuntime;}
+export function getDeviceGate(){getNotesRuntime();return deviceGate;}
 export function getNotesRuntime() {
   if(runtime) return runtime;
   const url=process.env.SUPABASE_URL;
@@ -18,6 +23,12 @@ export function getNotesRuntime() {
   const verify=createLoginVerifier({config,supabaseSecretKey:secret,supabaseClient:client});
   verifier=verify;
   const result=async promise=>{const {data,error}=await promise;if(error)throw error;return data;};
+  const devices={
+    read:async(owner,hash)=>(await result(client.rpc('get_browser_device_request',{p_owner:owner,p_hash:hash})))?.[0]??null,
+    request:async(owner,hash)=>(await result(client.rpc('request_browser_device',{p_owner:owner,p_hash:hash})))?.[0],
+  };
+  deviceGate=createDeviceGate({store:devices});
+  deviceRuntime=createDeviceHandler({verify,store:devices});
   const store={
     list:owner=>result(client.from('notes').select('id,title,body').eq('owner_id',owner).order('created_at',{ascending:false}).limit(100)),
     get:(id,owner)=>result(client.from('notes').select('id,title,body').eq('id',id).eq('owner_id',owner).maybeSingle()),
@@ -29,7 +40,7 @@ export function getNotesRuntime() {
   };
   // Every read and mutation is atomically scoped to the verified owner.
   // The service role bypasses RLS, so these API filters remain mandatory.
-  runtime=createNotesHandler({verify,store});
-  restoreRuntime=createRestoreHandler({verify,store});
+  runtime=createNotesHandler({verify,store,authorize:deviceGate});
+  restoreRuntime=createRestoreHandler({verify,store,authorize:deviceGate});
   return runtime;
 }

@@ -1,6 +1,14 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 10단계 검증한 사본에서 대상 복원
+## 현재 작업: 11단계 설치형 웹앱과 서버 승인 흐름
+
+기존 자료실에 manifest·192/512 아이콘·설치 안내·오프라인 안내를 붙였습니다. 서비스 워커는 공개 오프라인 안내만 보관하고 로그인·기기·메모 응답을 캐시하지 않습니다. 앱 설치는 승인이나 암호학적 기기 검증을 뜻하지 않습니다. 별도 접속 프로그램·CA·개인키를 만들지 않았으며 localStorage/IndexedDB에 키나 토큰을 저장하지 않습니다. 설치 설정은 [MDN 공식 안내](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)를 참고했습니다.
+
+로그인 후 「기기 승인 요청」 → 「승인 상태 다시 확인」 순서로 누릅니다. POST /api/devices/request는 항상 서버의 pending 요청만 만들며 요청 본문으로 승인할 수 없습니다. 임의 요청 ID는 HttpOnly·Secure 쿠키에, 그 SHA-256과 승인 상태는 비공개 DB에만 보관합니다. 서버 역할은 승인 테이블 SELECT/INSERT만 있고 승인 UPDATE 권한·공개 승인 API가 없습니다. 권한을 가진 DB 운영자가 별도로 검토해야 approved가 됩니다. 검토 대상은 승인 테이블의 본인·해시 행이며 실제 사용자에 대한 승인은 이번 자동 시험에서 수행하지 않았습니다.
+
+서버에서 approved로 읽힌 뒤에만 자료실이 표시됩니다. 서버 API도 일반 학생의 승인 상태를 매 요청 대조하므로 메뉴 우회로 열 수 없습니다. 거부·해제·알 수 없음·오프라인은 자료를 지웁니다. 이 브라우저 승인 표시는 하드웨어 소유 증명이 아니며, 실제 mTLS·요청 서명 검사는 제공 운영 엔진의 계약입니다. 공식 심판의 서명된 시험 신원은 자기 가상 행에 한정되고 기존 엔진의 기기·서명 검사를 따르며 브라우저 승인 쿠키로 그 검사를 대체하지 않습니다. 판정기 입력에 승인 필드를 지어넣지 않았습니다.
+
+`npm run test:devices`는 요청→대기→별도 서버 승인→본인 API 허용→해제 후 거부 및 다른 사용자 쿠키 거부를 모의 저장소로 확인합니다. 실제 학생 브라우저의 운영자 승인·실제 엔진 서명 실측은 미실행입니다. 10단계는 공식100점으로 통과했습니다.
 
 정책 사본은 9단계 fb0d25bc2963a7ac4b069f2bd1feff3293b7d232의 판정기·자원 규칙·설정과 실제 조회한 DB 권한/RLS 메타데이터입니다. recovery/safe-policy/manifest.json의 각 SHA-256과 스크립트에 고정한 manifest 해시를 먼저 대조합니다. `node scripts/policy-recovery.mjs init-demo`로 artifacts 아래 시험 사본의 기기 조건 한 줄만 바꿉니다. `node scripts/policy-recovery.mjs preview`로 복원 버전·대상·변경 줄을 확인한 뒤 `node scripts/policy-recovery.mjs restore --apply`로 그 시험 항목만 복원합니다. 사본·해시가 없거나 틀리면 중단합니다. 실제 정책·다른 서비스·기존 감사 이력은 변경하지 않습니다.
 

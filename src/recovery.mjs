@@ -5,7 +5,7 @@ export function noteDigest(note){
   const framed=`${note.id.toLowerCase()}|${note.owner_id.toLowerCase()}|${Buffer.byteLength(note.title)}:${note.title}${Buffer.byteLength(note.body)}:${note.body}`;
   return createHash('sha256').update(framed,'utf8').digest('hex');
 }
-export function createRestoreHandler({verify,store}){
+export function createRestoreHandler({verify,store,authorize=async()=>true}){
   return async function handle(request,response){
     response.setHeader('Cache-Control','private, no-store');
     response.setHeader('X-Content-Type-Options','nosniff');
@@ -13,6 +13,7 @@ export function createRestoreHandler({verify,store}){
     try{
       const principal=await verify(request.headers?.authorization);
       if(!principal)return json(401,{error:'AUTHENTICATION_REQUIRED'});
+      if(!await authorize(request,principal))return json(403,{error:'DEVICE_APPROVAL_REQUIRED'});
       if(principal.kind==='judge'&&principal.identity!=='b')return json(403,{error:'TEST_B_ONLY'});
       if(!['GET','POST'].includes(request.method))return json(405,{error:'METHOD_NOT_ALLOWED'});
       let body=request.body;

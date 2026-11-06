@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
-export function createNotesHandler({verify,store}) {
+export function createNotesHandler({verify,store,authorize=async()=>true}) {
   return async function handle(request,response) {
     response.setHeader('Cache-Control','no-store');
     response.setHeader('X-Content-Type-Options','nosniff');
@@ -9,6 +9,7 @@ export function createNotesHandler({verify,store}) {
     try {
       const principal=await verify(request.headers?.authorization);
       if(!principal) return json(401,{error:'AUTHENTICATION_REQUIRED'});
+      if(!await authorize(request,principal))return json(403,{error:'DEVICE_APPROVAL_REQUIRED'});
       const rawId=request.query?.id;
       if(rawId!==undefined&&(typeof rawId!=='string'||!UUID.test(rawId))) return json(400,{error:'INVALID_NOTE_ID'});
       const id=rawId?.toLowerCase();

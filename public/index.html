@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101a28"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg" type="image/svg+xml">
 <title>BYTE BACK | 로그인 자료실</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif}body{margin:0;background:#101a28;color:#ecf4ff}main{max-width:760px;margin:auto;padding:32px 20px}section,article{padding:20px;border:1px solid #51667c;border-radius:14px;margin:18px 0;background:#1a2a3d}p{line-height:1.7}label{display:block;margin:12px 0 5px}input,textarea,button{font:inherit;border-radius:7px;padding:10px;box-sizing:border-box}input,textarea{width:100%;border:1px solid #8396ac;background:#101a28;color:white}button{border:1px solid #8ad8df;background:#183e54;color:white;cursor:pointer;margin:10px 8px 0 0}button:disabled{opacity:.5;cursor:wait}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #8ad8df}textarea{min-height:110px}#message{white-space:pre-wrap;color:#ffe3b0}article p{white-space:pre-wrap}.muted{color:#bfd0e5}[hidden]{display:none!important}
@@ -10,6 +11,8 @@
 </head>
 <body><main>
 <p class="muted">BYTE BACK · 내 자료실</p><h1>로그인 자료실</h1>
+<button id="install-app" type="button" hidden>앱으로 추가</button>
+<p id="offline-message" role="status" hidden>인터넷 연결이 없습니다. 연결이 돌아온 뒤 승인 상태와 자료를 다시 확인해 주세요.</p>
 <p>실습용 가상 메모만 저장하세요. 로그인한 본인의 자료만 읽고 수정할 수 있습니다. 자료 요청과 로그인은 보호된 서버 경로에서 처리합니다.</p>
 <p class="muted">과거 공개 Git 커밋과 배포 사본은 현재 버전 수정만으로 회수되지 않습니다.</p>
 <section aria-labelledby="login-title"><h2 id="login-title">계정 로그인</h2>
@@ -18,6 +21,10 @@
 <label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="current-password" required>
 <button type="submit" id="login">로그인</button></form>
 <button id="logout" type="button" hidden>로그아웃</button></section>
+<section id="device-section" hidden aria-labelledby="device-title"><h2 id="device-title">이 기기의 승인</h2>
+<p id="device-status" role="status">승인 상태를 확인하고 있습니다.</p>
+<p class="muted">앱을 추가해도 기기 승인이 완료되지는 않습니다. 서버에서 승인하기 전에는 자료가 표시되지 않습니다.</p>
+<button id="request-device" type="button">기기 승인 요청</button><button id="check-device" type="button">승인 상태 다시 확인</button></section>
 <p id="message" role="status" aria-live="polite"></p>
 <section id="workspace" hidden aria-labelledby="notes-title"><h2 id="notes-title">내 가상 메모</h2>
 <button id="refresh" type="button">목록 다시 불러오기</button>
