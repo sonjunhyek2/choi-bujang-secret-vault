@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test:app": "node --test --test-isolation=none test/stage3.test.mjs test/stage5.test.mjs test/r5.test.mjs",
+    "test:policy": "node --test --test-isolation=none test/policy.test.mjs",
     "build": "node scripts/build-public.mjs",
     "test:r5": "node --test test/r5.test.mjs",
     "test:package": "node --test test/package-starter.test.mjs",
