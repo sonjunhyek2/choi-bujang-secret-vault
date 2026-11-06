@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:app": "node --test --test-isolation=none test/stage3.test.mjs test/r5.test.mjs",
+    "test:app": "node --test --test-isolation=none test/stage3.test.mjs test/stage5.test.mjs test/r5.test.mjs",
     "build": "node scripts/build-public.mjs",
     "test:r5": "node --test test/r5.test.mjs",
     "test:package": "node --test test/package-starter.test.mjs",
@@ -17,6 +17,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "jose": "6.2.12"
   },

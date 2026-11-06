@@ -1,12 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-const auth=createClient('https://epiirbcbtjvmyewuetkt.supabase.co','sb_publishable_4-Lyfr2q9QQnZ4DkgCF7Bw_RRqfJMCw');
 const el=id=>document.getElementById(id);
 let session=null,generation=0,requestSequence=0;
 const message=text=>{el('message').textContent=text;};
 function resetEditor(){el('note-form').reset();el('note-id').value='';el('save').textContent='메모 추가';el('cancel-edit').hidden=true;}
 async function api(path='',method='GET',body){
   if(!session)throw Error('로그인이 필요합니다.');
-  const response=await fetch(`/api/notes${path}`,{method,cache:'no-store',headers:{Authorization:`Bearer ${session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+  const response=await fetch(`/api/notes${path}`,{method,cache:'no-store',credentials:'same-origin',headers:{...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
   const data=await response.json();
   if(!response.ok)throw Error(data.error||'자료 요청에 실패했습니다.');
   return data;
@@ -42,22 +40,29 @@ async function loadNotes(){
     renderNotes(notes);message('목록을 불러왔습니다.');
   }catch(error){if(gen===generation&&seq===requestSequence)message(`목록 조회 실패: ${error.message}`);}
 }
-auth.auth.onAuthStateChange((_event,current)=>{
-  session=current;generation++;requestSequence++;resetEditor();el('notes').replaceChildren();
+function updateSession(authenticated){
+  session=authenticated;generation++;requestSequence++;resetEditor();el('notes').replaceChildren();
   el('identity').textContent=session?'로그인됨':'로그아웃됨 · 자료를 보려면 로그인하세요.';
   el('login-form').hidden=Boolean(session);el('logout').hidden=!session;el('workspace').hidden=!session;
   message('');
   if(session)setTimeout(loadNotes,0);
-});
+}
+async function authRequest(action,body){
+  const response=await fetch(`/api/auth/${action}`,{method:action==='session'?'GET':'POST',credentials:'same-origin',cache:'no-store',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify(body)}:{})});
+  const data=await response.json();
+  if(!response.ok)throw Error(data.error||'로그인 요청에 실패했습니다.');
+  return data;
+}
+authRequest('session').then(data=>{if(generation===0)updateSession(data.authenticated);}).catch(()=>{if(generation===0){updateSession(false);message('로그인 상태를 확인하지 못했습니다. 다시 시도해 주세요.');}});
 el('login-form').addEventListener('submit',async event=>{
   event.preventDefault();el('login').disabled=true;message('로그인 중입니다.');
-  try{const {error}=await auth.auth.signInWithPassword({email:el('email').value.trim(),password:el('password').value});el('password').value='';if(error)message(`로그인 실패: ${error.message}`);}
+  try{const data=await authRequest('login',{email:el('email').value.trim(),password:el('password').value});el('password').value='';updateSession(data.authenticated);}
   catch{message('로그인 서버에 연결하지 못했습니다.');el('password').value='';}
   finally{el('login').disabled=false;}
 });
 el('logout').addEventListener('click',async()=>{
   el('logout').disabled=true;
-  try{const {error}=await auth.auth.signOut();if(error)message(`로그아웃 실패: ${error.message}`);}
+  try{const data=await authRequest('logout');updateSession(data.authenticated);}
   catch{message('로그아웃 요청에 실패했습니다.');}
   finally{el('logout').disabled=false;}
 });
