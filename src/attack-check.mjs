@@ -35,25 +35,31 @@ export async function runAttackChecks(config) {
 async function runStageThreeChecks(config) {
   const app=new URL(config.publicAppUrl);
   if(app.protocol!=='https:'||app.username||app.password||app.search||app.hash||app.pathname!=='/'||app.hostname.endsWith('.example')) throw new Error('실제 배포 주소를 먼저 설정하세요.');
+  const readEvidence=(response,url)=>{
+    const requestId=response.headers?.get?.('x-request-id')||response.headers?.get?.('x-vercel-id')||response.headers?.get?.('sb-request-id')||'unavailable';
+    return `GET ${url} -> HTTP ${response.status}; request_id=${requestId}; checked_at=${new Date().toISOString()}`;
+  };
   const attempts=[];
-  for(const [attackId,method,headers,body] of [
-    ['anonymous_note_read','GET',{},undefined],
-    ['invalid_token_read','GET',{Authorization:'Bearer invalid'},undefined],
+  for(const [attackId,headers] of [
+    ['anonymous_note_read',{}],
+    ['invalid_token_read',{Authorization:'Bearer invalid'}],
   ]) {
-    const response=await fetch(new URL('/api/notes',app),{method,headers,body,redirect:'error',signal:AbortSignal.timeout(10000)});
+    const url=new URL('/api/notes',app).href;
+    const response=await fetch(url,{method:'GET',headers,redirect:'error',signal:AbortSignal.timeout(10000)});
     let errorJson=false;
     try {const data=await response.json();errorJson=typeof data.error==='string';}catch{/* HTML is not an authentication rejection. */}
-    attempts.push({attackId,expected:'인증 없는 또는 유효하지 않은 요청은 자료 없이 401/403 JSON 오류로 거부',observed:`HTTP ${response.status}, JSON 오류 ${errorJson?'확인됨':'확인되지 않음'}, 거부 ${[401,403].includes(response.status)?'확인됨':'확인되지 않음'}`});
+    attempts.push({attackId,expected:'인증 없는 또는 유효하지 않은 요청은 자료 없이 401/403 JSON 오류로 거부',observed:`${readEvidence(response,url)}; json_error=${errorJson}`});
   }
   attempts.push({attackId:'anonymous_note_create',expected:'인증 없는 메모 생성은 401/403 JSON 오류로 거부',observed:'not_run'});
-  const identityResponse=await fetch(new URL('/aleph.json',app),{redirect:'error',signal:AbortSignal.timeout(10000)});
+  const identityUrl=new URL('/aleph.json',app).href;
+  const identityResponse=await fetch(identityUrl,{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000)});
   let identityMatches=false;
   if(identityResponse.ok){try{const id=await identityResponse.json();identityMatches=id.step===config.step&&id.repoUrl===config.repoUrl&&/^[a-f0-9]{40}$/u.test(id.commit||'');}catch{}}
-  attempts.push({attackId:'deployment_identity',expected:`${config.step}단계 배포 식별 정보`,observed:`HTTP ${identityResponse.status}, 배포 식별 정보 ${identityMatches?'확인됨':'확인되지 않음'}`});
+  attempts.push({attackId:'deployment_identity',expected:`${config.step}단계 배포 식별 정보`,observed:`${readEvidence(identityResponse,identityUrl)}; identity=${identityMatches?'match':'mismatch'}`});
   if(config.step===4) attempts.push({attackId:'cross_owner_crud',expected:'실제 A/B 각자 CRUD 허용, 상대 자료 조회·수정·삭제 거부',observed:'실제 A/B 로그인 요청은 이 자기 점검에서 미실행. 로컬 모의 시험과 DB 역할 시험은 별도이며 공식 판정으로 대체하지 않습니다.'});
   if(config.step>=5) {
-    const direct=await fetch(config.originalApiUrl,{headers:{apikey:'sb_publishable_4-Lyfr2q9QQnZ4DkgCF7Bw_RRqfJMCw'},redirect:'error',signal:AbortSignal.timeout(10000)});
-    attempts.push({attackId:'original_api_public_key',expected:'공개 키 원본 자료 직접 요청 거부',observed:`HTTP ${direct.status}, 거부 ${[401,403].includes(direct.status)?'확인됨':'확인되지 않음'}`});
+    const direct=await fetch(config.originalApiUrl,{method:'GET',headers:{apikey:'sb_publishable_4-Lyfr2q9QQnZ4DkgCF7Bw_RRqfJMCw'},redirect:'error',signal:AbortSignal.timeout(10000)});
+    attempts.push({attackId:'original_api_public_key',expected:'공개 키 원본 자료 직접 요청 거부',observed:readEvidence(direct,config.originalApiUrl)});
   }
   attempts.push({attackId:'student_login_crud',expected:'실제 A 계정의 이메일·비밀번호 로그인과 CRUD',observed:'not_run'});
   return attempts;
