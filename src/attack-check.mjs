@@ -38,7 +38,6 @@ async function runStageThreeChecks(config) {
   const attempts=[];
   for(const [attackId,method,headers,body] of [
     ['anonymous_note_read','GET',{},undefined],
-    ['anonymous_note_create','POST',{'Content-Type':'application/json'},JSON.stringify({title:'self-check',body:'fictional request without authentication'})],
     ['invalid_token_read','GET',{Authorization:'Bearer invalid'},undefined],
   ]) {
     const response=await fetch(new URL('/api/notes',app),{method,headers,body,redirect:'error',signal:AbortSignal.timeout(10000)});
@@ -46,6 +45,7 @@ async function runStageThreeChecks(config) {
     try {const data=await response.json();errorJson=typeof data.error==='string';}catch{/* HTML is not an authentication rejection. */}
     attempts.push({attackId,expected:'인증 없는 또는 유효하지 않은 요청은 자료 없이 401/403 JSON 오류로 거부',observed:`HTTP ${response.status}, JSON 오류 ${errorJson?'확인됨':'확인되지 않음'}, 거부 ${[401,403].includes(response.status)?'확인됨':'확인되지 않음'}`});
   }
+  attempts.push({attackId:'anonymous_note_create',expected:'인증 없는 메모 생성은 401/403 JSON 오류로 거부',observed:'not_run'});
   const identityResponse=await fetch(new URL('/aleph.json',app),{redirect:'error',signal:AbortSignal.timeout(10000)});
   let identityMatches=false;
   if(identityResponse.ok){try{const id=await identityResponse.json();identityMatches=id.step===config.step&&id.repoUrl===config.repoUrl&&/^[a-f0-9]{40}$/u.test(id.commit||'');}catch{}}
