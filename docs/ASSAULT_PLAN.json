@@ -1,0 +1,293 @@
+{
+  "schema": "aleph.self-check.plan.v1",
+  "notice": "학생 자체 점검 계획 41개입니다. 공식 심판의 41종 공격 ID와 같은 목록으로 가장하지 않습니다. 실제 API 실측과 엔진·계정이 필요한 미실행을 구분합니다.",
+  "checks": [
+    {
+      "id": "T01",
+      "stage": 1,
+      "name": "현재 정적 자료 파일 노출",
+      "request": "GET /data.json",
+      "expected": "404"
+    },
+    {
+      "id": "T02",
+      "stage": 1,
+      "name": "첫 화면의 가상 메모 표식 노출",
+      "request": "GET /",
+      "expected": "200, 자료 표식 없음"
+    },
+    {
+      "id": "T03",
+      "stage": 2,
+      "name": "공개 키로 원본 자료 읽기",
+      "request": "GET 원본 notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T04",
+      "stage": 2,
+      "name": "공개 키로 원본 자료 쓰기",
+      "request": "POST 원본 notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T05",
+      "stage": 5,
+      "name": "브라우저 묶음의 키 노출",
+      "request": "GET /app.js",
+      "expected": "200, 키 없음"
+    },
+    {
+      "id": "T06",
+      "stage": 3,
+      "name": "로그인 없는 메모 목록",
+      "request": "GET /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T07",
+      "stage": 3,
+      "name": "로그인 없는 메모 추가",
+      "request": "POST /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T08",
+      "stage": 3,
+      "name": "유효하지 않은 토큰",
+      "request": "GET /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T09",
+      "stage": 3,
+      "name": "만료된 토큰",
+      "request": "GET /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T10",
+      "stage": 3,
+      "name": "다른 대상용 토큰",
+      "request": "GET /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T11",
+      "stage": 3,
+      "name": "다른 발급자 토큰",
+      "request": "GET /api/notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T12",
+      "stage": 4,
+      "name": "본인 메모 정상 읽기",
+      "request": "GET /api/notes/:id",
+      "expected": "200, 본인 자료"
+    },
+    {
+      "id": "T13",
+      "stage": 4,
+      "name": "다른 사용자 메모 읽기",
+      "request": "GET /api/notes/:id",
+      "expected": "403 또는 404"
+    },
+    {
+      "id": "T14",
+      "stage": 4,
+      "name": "다른 사용자 메모 수정",
+      "request": "PUT /api/notes/:id",
+      "expected": "403 또는 404"
+    },
+    {
+      "id": "T15",
+      "stage": 4,
+      "name": "다른 사용자 메모 삭제",
+      "request": "DELETE /api/notes/:id",
+      "expected": "403 또는 404"
+    },
+    {
+      "id": "T16",
+      "stage": 4,
+      "name": "본문 소유자 변경",
+      "request": "PUT /api/notes/:id",
+      "expected": "403"
+    },
+    {
+      "id": "T17",
+      "stage": 5,
+      "name": "사용자 토큰으로 원본 읽기",
+      "request": "GET 원본 notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T18",
+      "stage": 5,
+      "name": "사용자 토큰으로 원본 수정",
+      "request": "PATCH 원본 notes",
+      "expected": "401 또는 403"
+    },
+    {
+      "id": "T19",
+      "stage": 6,
+      "name": "미등록 기기",
+      "request": "운영 엔진 보호 요청",
+      "expected": "deny"
+    },
+    {
+      "id": "T20",
+      "stage": 6,
+      "name": "클라이언트 인증서 누락",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T21",
+      "stage": 6,
+      "name": "다른 사용자와 기기 조합",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T22",
+      "stage": 6,
+      "name": "등록 값 누락",
+      "request": "운영 엔진 판정 요청",
+      "expected": "deny"
+    },
+    {
+      "id": "T23",
+      "stage": 7,
+      "name": "지역 변화와 복합 위험",
+      "request": "운영 엔진 판정 요청",
+      "expected": "step_up"
+    },
+    {
+      "id": "T24",
+      "stage": 7,
+      "name": "야간 복합 이상 접속",
+      "request": "운영 엔진 판정 요청",
+      "expected": "step_up"
+    },
+    {
+      "id": "T25",
+      "stage": 7,
+      "name": "낯선 네트워크의 대량 접근",
+      "request": "운영 엔진 판정 요청",
+      "expected": "step_up"
+    },
+    {
+      "id": "T26",
+      "stage": 7,
+      "name": "재확인 전 민감 자료",
+      "request": "운영 엔진 보호 요청",
+      "expected": "자료 없음"
+    },
+    {
+      "id": "T27",
+      "stage": 8,
+      "name": "다른 구역 읽기",
+      "request": "운영 엔진 보호 요청",
+      "expected": "deny"
+    },
+    {
+      "id": "T28",
+      "stage": 8,
+      "name": "다른 구역 수정",
+      "request": "운영 엔진 보호 요청",
+      "expected": "deny"
+    },
+    {
+      "id": "T29",
+      "stage": 8,
+      "name": "전체 메모 목록 경로",
+      "request": "운영 엔진 보호 요청",
+      "expected": "deny"
+    },
+    {
+      "id": "T30",
+      "stage": 8,
+      "name": "학생의 공지 수정",
+      "request": "PUT /api/notices/:id",
+      "expected": "거부"
+    },
+    {
+      "id": "T31",
+      "stage": 9,
+      "name": "합성 폭주 사건 전달",
+      "request": "운영 엔진 사건",
+      "expected": "propose_revocation"
+    },
+    {
+      "id": "T32",
+      "stage": 9,
+      "name": "회수 신원 다음 요청",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T33",
+      "stage": 9,
+      "name": "회수 뒤 기존 세션",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T34",
+      "stage": 9,
+      "name": "회수 뒤 다른 자원",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T35",
+      "stage": 10,
+      "name": "B 변조 메모 복원",
+      "request": "POST /api/restore",
+      "expected": "ID·소유자·해시 일치"
+    },
+    {
+      "id": "T36",
+      "stage": 10,
+      "name": "B 삭제 메모 복원",
+      "request": "POST /api/restore",
+      "expected": "ID·소유자·해시 일치"
+    },
+    {
+      "id": "T37",
+      "stage": 10,
+      "name": "복원 뒤 기존 공격 재시험",
+      "request": "운영 엔진 총공세",
+      "expected": "기존 거부 유지"
+    },
+    {
+      "id": "T38",
+      "stage": 11,
+      "name": "서명 없는 보호 요청",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T39",
+      "stage": 11,
+      "name": "서명 뒤 경로 변경",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T40",
+      "stage": 11,
+      "name": "서명 뒤 본문 변경",
+      "request": "운영 엔진 보호 요청",
+      "expected": "거부"
+    },
+    {
+      "id": "T41",
+      "stage": 12,
+      "name": "같은 제출본의 복합 총공세",
+      "request": "운영 엔진 총공세",
+      "expected": "정상 허용·공격 거부"
+    }
+  ]
+}

@@ -1,6 +1,16 @@
 # BYTE BACK 방어전 시작 틀 R5
 
-## 현재 작업: 11단계 설치형 웹앱과 서버 승인 흐름
+## 현재 작업: 12단계 실제 결과를 읽는 탈환 작전실
+
+자료실의 「탈환 작전실 열기」 또는 `/operations.html`에서 판정 규칙·실제 자체 HTTP 점검·본인 서버 기록·정책 복구 버전과 미연결 상태를 확인합니다. 실제 API 결과와 요청 번호·확인 시각만 표에 넣으며 미실행을 통과로 바꾸지 않습니다. 자체41개 계획과 공식 심판41종은 구분합니다. 11단계는 공식100점으로 통과했습니다. [점검 범위와 미검증 기록](docs/STAGE12_VERIFICATION.md)을 먼저 읽으세요.
+
+설치·실행: Node.js24에서 `npm ci` → `npm run test:app` → `npm run test:policy` → `npm run test:detection` → `npm run test:recovery` → `npm run test:devices` → `npm run test:operations`입니다. 현재 소스를 본인 GitHub에 push하면 연결된 Vercel에서 build 명령과 public 폴더로 배포합니다. 서버의 SUPABASE_URL·SUPABASE_SERVICE_ROLE_KEY는 Vercel 비밀 입력란에서 준비하고 DB 변경은 docs/STAGE2_DATABASE.md 및 STAGE10_BACKUP.sql·STAGE11_DEVICES.sql·STAGE12_OPERATIONS.sql의 이력과 실제 권한을 대조합니다. 값이나 키는 Git/문서에 넣지 않습니다. 새 배포 주소를 쓰면 config.publicAppUrl·identityProvider의 실제 발급자·allowedRoutes·originalApiUrl·restoreRoute를 맞추되 judgeIssuer는 바꾸지 않습니다.
+
+새 학습 DB의 현재 기능을 구성할 때는 docs/STAGE3_NOTES.sql → STAGE4_RLS.sql → STAGE5_SERVER_ONLY.sql → STAGE10_BACKUP.sql → STAGE11_DEVICES.sql → STAGE12_OPERATIONS.sql 순서를 검토합니다. 이미 적용한 DB에 재실행하지 마세요. 기존 자료실 DB는 위 이력대로 적용돼 있으며 원래 가상 자료는 별도 vault_notes에 보존합니다. 실제 계정은 공식 Supabase Auth 절차로 준비하고 비밀번호는 채팅·소스·제출에 넣지 않습니다.
+
+실제 점검: 배포 READY와 `/aleph.json`의 커밋을 확인한 뒤 `npm run assault:check`로 결과를 저장합니다. 작전실에서 「실제 결과 다시 확인」을 누르고 표의 HTTP·시각·요청 번호가 응답 JSON과 같은지 봅니다. 보호된 본인 정상 요청은 실제 계정 로그인과 별도 서버 기기 승인 후 확인합니다. 운영 엔진의 미등록·서명·재인증·회수 시험은 계약이 준비된 환경에서만 수행하고 미실행은 그대로 남깁니다.
+
+중지·복구: 자료실·작전실 브라우저 탭을 닫으면 화면 점검이 끝나며, 서버는 Vercel 배포로 계속 운영됩니다. 사용자 자료를 지우는 중지 명령은 없습니다. 로컬 일회성 검사 명령은 완료 시 종료합니다. 시험 정책 복원은 아래 policy-recovery 절차만 사용하고 실제 배포 오류는 Vercel의 이전 정상 배포로 되돌린 뒤 본인·거부 요청을 다시 확인합니다. 메모는 검증한 비공개 사본에서 지정한 B 가상 메모 한 건만 복원합니다. **ALEPH SDP 엔진 사용**이며 학생 코드는 그 엔진의 신원·서명·회수 처리를 대체하지 않습니다.
 
 기존 자료실에 manifest·192/512 아이콘·설치 안내·오프라인 안내를 붙였습니다. 서비스 워커는 공개 오프라인 안내만 보관하고 로그인·기기·메모 응답을 캐시하지 않습니다. 앱 설치는 승인이나 암호학적 기기 검증을 뜻하지 않습니다. 별도 접속 프로그램·CA·개인키를 만들지 않았으며 localStorage/IndexedDB에 키나 토큰을 저장하지 않습니다. 설치 설정은 [MDN 공식 안내](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)를 참고했습니다.
 

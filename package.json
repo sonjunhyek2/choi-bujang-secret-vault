@@ -8,6 +8,8 @@
     "test:detection": "node --test --test-isolation=none test/detection.test.mjs",
     "test:recovery": "node --test --test-isolation=none test/recovery.test.mjs",
     "test:devices": "node --test --test-isolation=none test/devices.test.mjs",
+    "assault:check": "node scripts/assault-check.mjs",
+    "test:operations": "node --test --test-isolation=none test/assault-report.test.mjs",
     "build": "node scripts/build-public.mjs",
     "test:r5": "node --test test/r5.test.mjs",
     "test:package": "node --test test/package-starter.test.mjs",

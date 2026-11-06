@@ -10,10 +10,12 @@ let verifier;
 let restoreRuntime;
 let deviceRuntime;
 let deviceGate;
+let operationsSnapshot;
 export function getIdentityVerifier(){getNotesRuntime();return verifier;}
 export function getRestoreRuntime(){getNotesRuntime();return restoreRuntime;}
 export function getDevicesRuntime(){getNotesRuntime();return deviceRuntime;}
 export function getDeviceGate(){getNotesRuntime();return deviceGate;}
+export function getOperationsSnapshot(owner){getNotesRuntime();return operationsSnapshot(owner);}
 export function getNotesRuntime() {
   if(runtime) return runtime;
   const url=process.env.SUPABASE_URL;
@@ -23,6 +25,7 @@ export function getNotesRuntime() {
   const verify=createLoginVerifier({config,supabaseSecretKey:secret,supabaseClient:client});
   verifier=verify;
   const result=async promise=>{const {data,error}=await promise;if(error)throw error;return data;};
+  operationsSnapshot=owner=>result(client.rpc('get_operations_snapshot',{p_owner:owner}));
   const devices={
     read:async(owner,hash)=>(await result(client.rpc('get_browser_device_request',{p_owner:owner,p_hash:hash})))?.[0]??null,
     request:async(owner,hash)=>(await result(client.rpc('request_browser_device',{p_owner:owner,p_hash:hash})))?.[0],

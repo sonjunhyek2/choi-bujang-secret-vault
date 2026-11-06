@@ -1,6 +1,8 @@
 import {browserAuthorization} from '../src/session-client.mjs';
 import {getRestoreRuntime} from '../src/notes-runtime.mjs';
+import {traceResponse} from '../src/request-trace.mjs';
 export default async function handler(request,response){
+  traceResponse(response);
   response.setHeader('Cache-Control','private, no-store');
   response.setHeader('Vary','Cookie, Origin');
   try{
